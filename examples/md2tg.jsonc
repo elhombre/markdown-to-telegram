@@ -1,0 +1,88 @@
+{
+  // Default publish target used when --target and profile target are omitted.
+  "defaultTarget": "bot-api",
+  "overflowMode": "fail",
+  "continuationPreambleMarkdown": "_(continued...)_",
+
+  "publish": {
+    "sendRetries": 3,
+    "minPostIntervalMs": 1000,
+    "postStateFile": "./.md2tg/publish-state.json",
+    "postLockFile": "./.md2tg/publish-state.lock",
+  },
+
+  "tdlib": {
+    "sessionRootDir": "./.md2tg/tdlib",
+    "useFileDatabase": true,
+    "useChatInfoDatabase": true,
+    "useMessageDatabase": true,
+    "useSecretChats": false,
+    "systemLanguageCode": "en",
+    "deviceModel": "md2tg-cli",
+    "applicationVersion": "0.1.0",
+  },
+
+  "fragments": {
+    "preambleFile": "./fragments/preamble.example.md",
+    "postambleFile": "./fragments/postamble.example.md",
+  },
+
+  "splitRules": {
+    "keepParagraphIntact": true,
+    "keepHeadingWithNextBlock": true,
+    "keepColonPreambleWithList": true,
+    "keepColonPreambleWithQuote": true,
+  },
+
+  "headingDecorations": {
+    "h1": { "prefix": "[ " , "suffix": " ]" },
+    "h2": { "prefix": "> " },
+    "h3": { "prefix": "(", "suffix": ")" },
+  },
+
+  "headingStyles": {
+    "h3": ["italic"],
+  },
+
+  "sectionHeadingRules": [
+    {
+      "pattern": "^Next Steps$",
+      "prefix": "> ",
+    },
+    {
+      "pattern": "^(FAQ|Questions)$",
+      "replaceText": "Common Questions",
+    },
+  ],
+
+  "attachments": {
+    "sectionTitle": "Attachments",
+    "generateThumbnails": true,
+    "allowedExtensions": [".pdf", ".zip", ".docx"],
+  },
+
+  "profiles": {
+    "default": {
+      "target": "bot-api",
+      "chatId": "@example_channel",
+      "disableWebPagePreview": false,
+    },
+
+    "account-main": {
+      "target": "tdlib",
+      "chatId": "@example_channel",
+      "accountTier": "auto",
+      "tdlib": {
+        "sessionName": "main-account",
+      },
+    },
+
+    "preview": {
+      "target": "bot-api",
+      "chatId": "@preview_channel",
+      "disableWebPagePreview": true,
+      "overflowMode": "split",
+      "continuationPreambleMarkdown": "_(continued in the next message...)_",
+    },
+  },
+}
