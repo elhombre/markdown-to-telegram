@@ -8,7 +8,7 @@
     "sendRetries": 3,
     "minPostIntervalMs": 1000,
     "postStateFile": "./.md2tg/publish-state.json",
-    "postLockFile": "./.md2tg/publish-state.lock",
+    "postLockFile": "./.md2tg/publish-state.lock"
   },
 
   "tdlib": {
@@ -19,53 +19,53 @@
     "useSecretChats": false,
     "systemLanguageCode": "en",
     "deviceModel": "md2tg-cli",
-    "applicationVersion": "0.1.0",
+    "applicationVersion": "0.1.0"
   },
 
   "fragments": {
     "preambleFile": "./fragments/preamble.example.md",
-    "postambleFile": "./fragments/postamble.example.md",
+    "postambleFile": "./fragments/postamble.example.md"
   },
 
   "splitRules": {
     "keepParagraphIntact": true,
     "keepHeadingWithNextBlock": true,
     "keepColonPreambleWithList": true,
-    "keepColonPreambleWithQuote": true,
+    "keepColonPreambleWithQuote": true
   },
 
   "headingDecorations": {
-    "h1": { "prefix": "[ " , "suffix": " ]" },
+    "h1": { "prefix": "[ ", "suffix": " ]" },
     "h2": { "prefix": "> " },
-    "h3": { "prefix": "(", "suffix": ")" },
+    "h3": { "prefix": "(", "suffix": ")" }
   },
 
   "headingStyles": {
-    "h3": ["italic"],
+    "h3": ["italic"]
   },
 
   "sectionHeadingRules": [
     {
       "pattern": "^Next Steps$",
-      "prefix": "> ",
+      "prefix": "> "
     },
     {
       "pattern": "^(FAQ|Questions)$",
-      "replaceText": "Common Questions",
-    },
+      "replaceText": "Common Questions"
+    }
   ],
 
   "attachments": {
     "sectionTitle": "Attachments",
     "generateThumbnails": true,
-    "allowedExtensions": [".pdf", ".zip", ".docx"],
+    "allowedExtensions": [".pdf", ".zip", ".docx"]
   },
 
   "profiles": {
     "default": {
       "target": "bot-api",
       "chatId": "@example_channel",
-      "disableWebPagePreview": false,
+      "disableWebPagePreview": false
     },
 
     "account-main": {
@@ -73,8 +73,8 @@
       "chatId": "@example_channel",
       "accountTier": "auto",
       "tdlib": {
-        "sessionName": "main-account",
-      },
+        "sessionName": "main-account"
+      }
     },
 
     "preview": {
@@ -82,7 +82,7 @@
       "chatId": "@preview_channel",
       "disableWebPagePreview": true,
       "overflowMode": "split",
-      "continuationPreambleMarkdown": "_(continued in the next message...)_",
-    },
-  },
+      "continuationPreambleMarkdown": "_(continued in the next message...)_"
+    }
+  }
 }
