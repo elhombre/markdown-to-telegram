@@ -39,13 +39,17 @@
     "bin",
     "dist",
     "examples",
+    "src",
+    "tsconfig.json",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "npm run build",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

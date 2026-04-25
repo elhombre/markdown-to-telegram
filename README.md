@@ -29,6 +29,18 @@ npm install -g markdown-to-telegram
 md2tg --help
 ```
 
+GitHub source installs depend on package-manager lifecycle hooks because generated `dist` files are not committed. With Yarn 4, use the Git protocol form instead of the `github:` shorthand so Yarn packs the repository before installation:
+
+```json
+{
+  "dependencies": {
+    "markdown-to-telegram": "git+https://github.com/elhombre/markdown-to-telegram.git"
+  }
+}
+```
+
+Yarn documents that Git protocol dependencies are packed before use, and the package includes `prepare` and `prepack` build hooks for that flow.
+
 ## CLI
 
 ```bash

@@ -1,5 +1,5 @@
-.*
-dist
 node_modules/
+.npm-cache/
+dist/
 *.tgz
-!.gitignore
+.env

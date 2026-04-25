@@ -3,4 +3,6 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 const currentDir = dirname(fileURLToPath(import.meta.url))
-await import(resolve(currentDir, '../dist/cli/index.js'))
+const cliEntry = resolve(currentDir, '../dist/cli/index.js')
+
+await import(cliEntry)
