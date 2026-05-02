@@ -5,12 +5,14 @@ export {
   closeTdlibClient,
   createLoggedInTdlibClient,
   createTdlibClient,
+  getCurrentUser,
   loginWithTdlib,
   resolveChat,
   searchChats,
 } from './client.js'
 export type {
   TdlibAccountTier,
+  TdlibAuthCallbacks,
   TdlibChatSearchResult,
   TdlibCapabilityConfig,
   TdlibCapabilityResolution,

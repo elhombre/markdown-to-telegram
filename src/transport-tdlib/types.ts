@@ -11,6 +11,7 @@ export interface TdlibWarning {
 export interface TdlibSessionConfig {
   apiId: number
   apiHash: string
+  auth?: TdlibAuthCallbacks
   sessionName?: string
   sessionRootDir?: string
   databaseEncryptionKey?: string
@@ -21,6 +22,16 @@ export interface TdlibSessionConfig {
   systemLanguageCode?: string
   deviceModel?: string
   applicationVersion?: string
+}
+
+export interface TdlibAuthCallbacks {
+  getPhoneNumber?: (retry?: boolean) => Promise<string>
+  getEmailAddress?: () => Promise<string>
+  getEmailCode?: () => Promise<string>
+  confirmOnAnotherDevice?: (link: string) => void
+  getAuthCode?: (retry?: boolean) => Promise<string>
+  getPassword?: (passwordHint: string, retry?: boolean) => Promise<string>
+  getName?: () => Promise<{ firstName: string; lastName?: string }>
 }
 
 export interface TdlibCapabilityConfig extends TdlibSessionConfig {

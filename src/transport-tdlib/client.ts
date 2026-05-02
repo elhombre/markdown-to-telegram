@@ -8,6 +8,7 @@ import * as tdl from 'tdl'
 
 import type {
   TdlibChatSearchResult,
+  TdlibAuthCallbacks,
   TdlibPremiumLimit,
   TdlibResolvedChat,
   TdlibRuntimeSnapshot,
@@ -190,15 +191,15 @@ export async function createTdlibClient(config: TdlibSessionConfig): Promise<TdC
   return client
 }
 
-export async function loginWithTdlib(client: TdClient): Promise<void> {
-  await client.login()
+export async function loginWithTdlib(client: TdClient, auth?: TdlibAuthCallbacks): Promise<void> {
+  await client.login(auth)
 }
 
 export async function createLoggedInTdlibClient(config: TdlibSessionConfig): Promise<TdClient> {
   let client = await createTdlibClient(config)
 
   try {
-    await loginWithTdlib(client)
+    await loginWithTdlib(client, config.auth)
     return client
   } catch (error: unknown) {
     await closeTdlibClient(client)
@@ -211,7 +212,7 @@ export async function createLoggedInTdlibClient(config: TdlibSessionConfig): Pro
   client = await createTdlibClient(config)
 
   try {
-    await loginWithTdlib(client)
+    await loginWithTdlib(client, config.auth)
     return client
   } catch (error: unknown) {
     await closeTdlibClient(client)
@@ -291,20 +292,98 @@ export async function getCaptionPremiumLimit(client: TdClient): Promise<TdlibPre
 }
 
 export async function resolveChat(client: TdClient, value: string): Promise<TdlibResolvedChat> {
-  const chat = isNumericChatId(value)
-    ? await invoke<TdChat>(client, {
-        _: 'getChat',
-        chat_id: Number(value),
-      })
-    : await invoke<TdChat>(client, {
-        _: 'searchPublicChat',
-        username: normalizeChannelUsername(value),
-      })
+  const normalizedValue = value.trim()
+
+  if (normalizedValue.length === 0) {
+    throw new Error('Missing TDLib chat id or username.')
+  }
+
+  const chat = isNumericChatId(normalizedValue)
+    ? await resolveChatById(client, Number(normalizedValue))
+    : await resolveChatByUsernameOrKnownTitle(client, normalizedValue)
 
   return {
     id: chat.id,
     title: chat.title,
   }
+}
+
+async function resolveChatById(client: TdClient, chatId: number): Promise<TdChat> {
+  try {
+    return await getChatById(client, chatId)
+  } catch (error) {
+    await loadKnownChats(client, 100)
+
+    try {
+      return await getChatById(client, chatId)
+    } catch {
+      throw error
+    }
+  }
+}
+
+async function resolveChatByUsernameOrKnownTitle(client: TdClient, value: string): Promise<TdChat> {
+  const publicChatError = await trySearchPublicChat(client, value)
+
+  if (publicChatError.chat) {
+    return publicChatError.chat
+  }
+
+  if (value.startsWith('@')) {
+    throw publicChatError.error
+  }
+
+  await loadKnownChats(client, 100)
+  const knownChatIds = await collectKnownChatIds(client, value, 20)
+  const knownChats: TdChat[] = []
+
+  for (const knownChatId of knownChatIds) {
+    try {
+      knownChats.push(await getChatById(client, knownChatId))
+    } catch {
+      // Search can return stale ids. Keep any usable matches.
+    }
+  }
+
+  if (knownChats.length === 0) {
+    throw publicChatError.error
+  }
+
+  const exactTitle = knownChats.find(chat => chat.title.localeCompare(value, undefined, { sensitivity: 'accent' }) === 0)
+
+  if (exactTitle) {
+    return exactTitle
+  }
+
+  if (knownChats.length === 1) {
+    return knownChats[0]
+  }
+
+  const titles = knownChats.map(chat => JSON.stringify(chat.title)).join(', ')
+  throw new Error(`TDLib chat query "${value}" matched multiple known chats: ${titles}. Use a more specific title.`)
+}
+
+async function trySearchPublicChat(
+  client: TdClient,
+  value: string,
+): Promise<{ chat: TdChat; error?: undefined } | { chat?: undefined; error: unknown }> {
+  try {
+    return {
+      chat: await invoke<TdChat>(client, {
+        _: 'searchPublicChat',
+        username: normalizeChannelUsername(value),
+      }),
+    }
+  } catch (error) {
+    return { error }
+  }
+}
+
+function getChatById(client: TdClient, chatId: number): Promise<TdChat> {
+  return invoke<TdChat>(client, {
+    _: 'getChat',
+    chat_id: chatId,
+  })
 }
 
 export async function searchChats(client: TdClient, query: string, limit = 20): Promise<TdlibChatSearchResult[]> {

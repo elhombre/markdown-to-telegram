@@ -312,9 +312,11 @@ TELEGRAM_TDLIB_API_ID=123456
 TELEGRAM_TDLIB_API_HASH=0123456789abcdef0123456789abcdef
 ```
 
-Use a profile with `target: "tdlib"` and a stable `tdlib.sessionName`. The first command that needs TDLib will run TDLib authorization in the terminal.
+Use a profile with `target: "tdlib"` and a stable `tdlib.sessionName`. The first CLI command that needs TDLib will run TDLib authorization in the terminal. Library callers can pass TDLib login callbacks when they need to collect phone, code, password, or registration data outside the terminal.
 
-For private channels, the authorized account must already know the chat. Resolve its numeric ID with:
+For private channels, the authorized account must already know the chat. Publishing automatically loads known chats and
+can resolve a private channel by its exact title, so `chatId` may be a public username, a numeric TDLib chat id, or a
+known private channel title. You can still inspect matches with:
 
 ```bash
 md2tg resolve-chat --query "Private Channel Title" --profile account-main
