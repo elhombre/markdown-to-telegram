@@ -5,6 +5,7 @@ import { publishBotApiPlan } from '../transport-bot-api/index.js'
 import {
   closeTdlibClient,
   createLoggedInTdlibClient,
+  logoutTdlibSession,
   publishTdlibPlan,
   resolveTdlibCapabilities,
   searchChats,
@@ -640,16 +641,10 @@ async function runLogoutCommand(options: CliOptions, invocationCwd: string): Pro
 
   reportAutoSelectedProfile(selection, target)
 
-  const client = await createLoggedInTdlibClient(resolveTdlibSessionConfig(configPath, config.tdlib, profile))
-
-  try {
-    await client.invoke({ _: 'logOut' })
-    process.stdout.write(
-      `Logged out TDLib session "${profile?.tdlib?.sessionName ?? 'default'}"${selection.name ? ` for profile "${selection.name}"` : ''}.\n`,
-    )
-  } finally {
-    await closeTdlibClient(client)
-  }
+  await logoutTdlibSession(resolveTdlibSessionConfig(configPath, config.tdlib, profile))
+  process.stdout.write(
+    `Logged out TDLib session "${profile?.tdlib?.sessionName ?? 'default'}"${selection.name ? ` for profile "${selection.name}"` : ''}.\n`,
+  )
 }
 
 function reportWarnings(diagnostics: Diagnostic[]): void {

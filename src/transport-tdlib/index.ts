@@ -7,6 +7,7 @@ export {
   createTdlibClient,
   getCurrentUser,
   loginWithTdlib,
+  logoutTdlibSession,
   resolveChat,
   searchChats,
 } from './client.js'

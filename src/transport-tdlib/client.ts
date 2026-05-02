@@ -224,6 +224,28 @@ export async function closeTdlibClient(client: TdClient): Promise<void> {
   await client.close()
 }
 
+export async function logoutTdlibSession(config: TdlibSessionConfig): Promise<void> {
+  let client: TdClient | null = await createLoggedInTdlibClient(config)
+
+  try {
+    await invoke(client, { _: 'logOut' })
+  } catch (error) {
+    if (!isAuthorizationStateClosedError(error)) {
+      throw error
+    }
+  } finally {
+    if (client) {
+      const clientToClose = client
+      client = null
+      await closeTdlibClient(clientToClose).catch(error => {
+        if (!isAuthorizationStateClosedError(error)) {
+          throw error
+        }
+      })
+    }
+  }
+}
+
 export async function invoke<T>(client: TdClient, request: Record<string, unknown>): Promise<T> {
   const response = (await client.invoke(request)) as unknown
 
