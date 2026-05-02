@@ -255,22 +255,13 @@ export async function getCurrentUser(client: TdClient): Promise<TdUser> {
 }
 
 export async function getResolvedPremiumStatus(client: TdClient, currentUser?: TdUser): Promise<boolean | undefined> {
-  const optionValue = await getBooleanOption(client, 'is_premium')
   const userValue = currentUser?.is_premium
 
-  if (optionValue === undefined) {
+  if (userValue !== undefined) {
     return userValue
   }
 
-  if (userValue === undefined) {
-    return optionValue
-  }
-
-  if (optionValue === userValue) {
-    return optionValue
-  }
-
-  return undefined
+  return getBooleanOption(client, 'is_premium')
 }
 
 export async function getCaptionPremiumLimit(client: TdClient): Promise<TdlibPremiumLimit | undefined> {

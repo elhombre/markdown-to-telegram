@@ -324,6 +324,10 @@ md2tg resolve-chat --query "Private Channel Title" --profile account-main
 
 TDLib currently publishes local media files and local attachments. Remote URL media and Bot API file IDs are rejected explicitly for TDLib publishing.
 
+TDLib publishing resolves caption and message limits from the authorized TDLib session. For Premium user sessions,
+md2tg uses TDLib premium caption metadata when available. This can allow longer media captions than Bot API publishing,
+while preserving the same media-first post shape.
+
 ## Diagnostics
 
 Parsing and planning return structured diagnostics:

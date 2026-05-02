@@ -63,25 +63,27 @@ export function resolveCapabilitiesFromRuntime(
     }
     case 'auto':
     default: {
-      if (accountIsPremium === true && (currentCaptionMatchesPremium || runtime.premiumCaptionLimit === undefined)) {
+      if (accountIsPremium === true) {
         captionLimit = resolvePremiumCaptionLimit(runtime)
         accountTierResolved = 'premium'
         break
       }
 
-      if (accountIsPremium === false && (currentCaptionMatchesStandard || runtime.standardCaptionLimit === undefined)) {
-        captionLimit = resolveStandardCaptionLimit(runtime)
-        accountTierResolved = 'standard'
-        break
-      }
-
-      warnings.push({
-        code: 'TDLIB_ACCOUNT_TIER_FALLBACK_STANDARD',
-        message:
-          'TDLib account tier could not be determined reliably. Falling back to safe standard caption limits for planning and publishing.',
-      })
-      captionLimit = resolveStandardCaptionLimit(runtime)
+      captionLimit = runtime.currentCaptionLimit
       accountTierResolved = 'standard'
+
+      if (
+        runtime.standardCaptionLimit !== undefined &&
+        runtime.premiumCaptionLimit !== undefined &&
+        !currentCaptionMatchesStandard &&
+        !currentCaptionMatchesPremium
+      ) {
+        warnings.push({
+          code: 'TDLIB_CAPTION_LIMIT_METADATA_MISMATCH',
+          message:
+            'TDLib reported a caption limit that does not match the advertised standard or Premium caption metadata. Using the current TDLib session limit.',
+        })
+      }
       break
     }
   }
@@ -105,12 +107,12 @@ export function resolveCapabilitiesFromRuntime(
 }
 
 function resolveStandardCaptionLimit(runtime: TdlibRuntimeSnapshot): number {
-  if (runtime.standardCaptionLimit !== undefined) {
-    return runtime.standardCaptionLimit
-  }
-
   if (runtime.accountIsPremium === false) {
     return runtime.currentCaptionLimit
+  }
+
+  if (runtime.standardCaptionLimit !== undefined) {
+    return runtime.standardCaptionLimit
   }
 
   throw new Error('Unable to derive a safe standard TDLib caption limit for accountTier fallback.')
