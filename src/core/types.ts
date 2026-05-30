@@ -51,6 +51,8 @@ export interface HeadingDecorationsConfig {
 export type HeadingTextStyle = 'bold' | 'italic' | 'underline' | 'strike' | 'code'
 
 export interface HeadingStylesConfig {
+  h1?: HeadingTextStyle[]
+  h2?: HeadingTextStyle[]
   h3?: HeadingTextStyle[]
 }
 

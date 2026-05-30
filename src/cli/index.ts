@@ -767,17 +767,23 @@ function resolveRenderConfig(
   const h1 = mergeHeadingDecoration(globalHeadingDecorations?.h1, profileHeadingDecorations?.h1)
   const h2 = mergeHeadingDecoration(globalHeadingDecorations?.h2, profileHeadingDecorations?.h2)
   const h3Decoration = mergeHeadingDecoration(globalHeadingDecorations?.h3, profileHeadingDecorations?.h3)
-  const h3 = profileHeadingStyles?.h3 ?? globalHeadingStyles?.h3
+  const h1Styles = profileHeadingStyles?.h1 ?? globalHeadingStyles?.h1
+  const h2Styles = profileHeadingStyles?.h2 ?? globalHeadingStyles?.h2
+  const h3Styles = profileHeadingStyles?.h3 ?? globalHeadingStyles?.h3
   const sectionHeadingRules = profileSectionHeadingRules ?? globalSectionHeadingRules
 
   validateSectionHeadingRules(sectionHeadingRules)
-  validateHeadingStyles(h3)
+  validateHeadingStyles(h1Styles)
+  validateHeadingStyles(h2Styles)
+  validateHeadingStyles(h3Styles)
 
   if (
     h1 === undefined &&
     h2 === undefined &&
     h3Decoration === undefined &&
-    h3 === undefined &&
+    h1Styles === undefined &&
+    h2Styles === undefined &&
+    h3Styles === undefined &&
     sectionHeadingRules === undefined
   ) {
     return undefined
@@ -790,7 +796,9 @@ function resolveRenderConfig(
       h3: h3Decoration,
     },
     headingStyles: {
-      h3,
+      h1: h1Styles,
+      h2: h2Styles,
+      h3: h3Styles,
     },
     sectionHeadingRules,
   }

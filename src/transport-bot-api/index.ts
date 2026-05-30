@@ -145,7 +145,7 @@ async function publishStep(step: PublishStep, config: BotApiPublishConfig): Prom
         chat_id: config.chatId,
         text: step.html,
         parse_mode: 'HTML',
-        disable_web_page_preview: config.disableWebPagePreview ?? false,
+        ...(config.disableWebPagePreview ? { link_preview_options: { is_disabled: true } } : {}),
       })
       return [payload]
     }

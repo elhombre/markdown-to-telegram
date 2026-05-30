@@ -21,6 +21,8 @@ interface NormalizedBotHtmlRenderConfig {
     h3?: { prefix?: string; suffix?: string }
   }
   headingStyles: {
+    h1: HeadingTextStyle[]
+    h2: HeadingTextStyle[]
     h3: HeadingTextStyle[]
   }
   sectionHeadingRules: NormalizedSectionHeadingRule[]
@@ -143,6 +145,8 @@ function normalizeRenderConfig(config?: BotHtmlRenderConfig): NormalizedBotHtmlR
       h3: normalizeHeadingDecoration(config?.headingDecorations?.h3),
     },
     headingStyles: {
+      h1: normalizeHeadingStyles(config?.headingStyles?.h1, ['bold']),
+      h2: normalizeHeadingStyles(config?.headingStyles?.h2, ['bold']),
       h3: normalizeHeadingStyles(config?.headingStyles?.h3, ['italic']),
     },
     sectionHeadingRules: normalizeSectionHeadingRules(config),
@@ -197,7 +201,15 @@ function resolveHeadingRender(
               : undefined,
   )
 
-  if (block.level === 1 || block.level === 2 || block.level >= 4) {
+  if (block.level === 1) {
+    return applyHeadingStyles(content, config.headingStyles.h1)
+  }
+
+  if (block.level === 2) {
+    return applyHeadingStyles(content, config.headingStyles.h2)
+  }
+
+  if (block.level >= 4) {
     return `<b>${content}</b>`
   }
 
