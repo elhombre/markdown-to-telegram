@@ -149,6 +149,20 @@ export class TdlibMessageSendError extends Error {
   }
 }
 
+export class TdlibRequestError extends Error {
+  readonly code: number
+  readonly floodWaitSeconds?: number
+  readonly tdlibMessage: string
+
+  constructor(code: number, message: string) {
+    super(`TDLib error ${code}: ${message}`)
+    this.name = 'TdlibRequestError'
+    this.code = code
+    this.floodWaitSeconds = extractFloodWaitSeconds(message)
+    this.tdlibMessage = message
+  }
+}
+
 export async function createTdlibClient(config: TdlibSessionConfig): Promise<TdClient> {
   ensureConfigured()
 
@@ -250,10 +264,20 @@ export async function invoke<T>(client: TdClient, request: Record<string, unknow
   const response = (await client.invoke(request)) as unknown
 
   if (isTdError(response)) {
-    throw new Error(`TDLib error ${response.code}: ${response.message}`)
+    throw new TdlibRequestError(response.code, response.message)
   }
 
   return response as T
+}
+
+function extractFloodWaitSeconds(message: string): number | undefined {
+  const match = message.match(/FLOOD_WAIT_?(\d+)/i)
+  if (!match?.[1]) {
+    return undefined
+  }
+
+  const seconds = Number(match[1])
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
 }
 
 export async function getRuntimeSnapshot(client: TdClient): Promise<TdlibRuntimeSnapshot> {

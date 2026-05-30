@@ -52,9 +52,24 @@ export interface TdlibPublishConfig extends TdlibCapabilityConfig {
   generateDocumentThumbnails?: boolean
   saveGeneratedThumbnails?: boolean
   sendRetries?: number
+  partSendIntervalMs?: number
+  beforePublishStep?: (context: TdlibBeforePublishStepContext) => Promise<void> | void
+  afterPublishStep?: (context: TdlibAfterPublishStepContext) => Promise<void> | void
   minPostIntervalMs?: number
   postStateFile?: string
   postLockFile?: string
+}
+
+export interface TdlibBeforePublishStepContext {
+  attempt: number
+  step: PublishPlan['steps'][number]
+  stepCount: number
+  stepIndex: number
+  target: 'tdlib'
+}
+
+export interface TdlibAfterPublishStepContext extends TdlibBeforePublishStepContext {
+  messageCount: number
 }
 
 export interface TdlibPublishResult {

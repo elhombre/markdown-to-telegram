@@ -51,12 +51,20 @@ export async function publishTdlibPlan(plan: PublishPlan, config: TdlibPublishCo
 
         for (const [index, step] of plan.steps.entries()) {
           try {
-            const published = await publishStepWithRetries(client, chat.id, step, config, sendRetries)
+            const published = await publishStepWithRetries(client, chat.id, step, config, sendRetries, {
+              stepCount: plan.steps.length,
+              stepIndex: index,
+            })
             messageIds.push(...published)
+            if (index < plan.steps.length - 1) {
+              await delay(config.partSendIntervalMs)
+            }
           } catch (error: unknown) {
             await rollbackMessages(client, chat.id, messageIds)
             const message = error instanceof Error ? error.message : String(error)
-            throw new Error(`Failed to publish TDLib step ${index + 1}/${plan.steps.length}: ${message}`)
+            throw new Error(`Failed to publish TDLib step ${index + 1}/${plan.steps.length}: ${message}`, {
+              cause: error,
+            })
           }
         }
 
@@ -81,12 +89,29 @@ async function publishStepWithRetries(
   step: PublishStep,
   config: TdlibPublishConfig,
   sendRetries: number,
+  context: { stepCount: number; stepIndex: number },
 ): Promise<number[]> {
   let lastError: unknown
 
   for (let attempt = 1; attempt <= sendRetries; attempt += 1) {
     try {
-      return await publishStep(client, chatId, step, config)
+      await config.beforePublishStep?.({
+        attempt,
+        step,
+        stepCount: context.stepCount,
+        stepIndex: context.stepIndex,
+        target: 'tdlib',
+      })
+      const messageIds = await publishStep(client, chatId, step, config)
+      await config.afterPublishStep?.({
+        attempt,
+        messageCount: messageIds.length,
+        step,
+        stepCount: context.stepCount,
+        stepIndex: context.stepIndex,
+        target: 'tdlib',
+      })
+      return messageIds
     } catch (error: unknown) {
       const pendingMessageIds = extractPendingMessageIds(error)
       if (pendingMessageIds.length > 0) {
@@ -227,4 +252,12 @@ function normalizeRetryCount(sendRetries?: number): number {
 
 function extractPendingMessageIds(error: unknown): number[] {
   return error instanceof TdlibMessageSendError ? error.pendingMessageIds : []
+}
+
+function delay(intervalMs: number | undefined): Promise<void> {
+  if (intervalMs === undefined || !Number.isFinite(intervalMs) || intervalMs <= 0) {
+    return Promise.resolve()
+  }
+
+  return new Promise(resolve => setTimeout(resolve, intervalMs))
 }

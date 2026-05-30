@@ -25,7 +25,22 @@ interface TelegramMessage {
 interface TelegramApiResponse<T> {
   ok: boolean
   description?: string
+  parameters?: {
+    retry_after?: number
+  }
   result?: T
+}
+
+export interface BotApiBeforePublishStepContext {
+  attempt: number
+  step: PublishStep
+  stepCount: number
+  stepIndex: number
+  target: 'bot-api'
+}
+
+export interface BotApiAfterPublishStepContext extends BotApiBeforePublishStepContext {
+  messageCount: number
 }
 
 export interface BotApiPublishConfig {
@@ -35,9 +50,26 @@ export interface BotApiPublishConfig {
   generateDocumentThumbnails?: boolean
   saveGeneratedThumbnails?: boolean
   sendRetries?: number
+  partSendIntervalMs?: number
+  beforePublishStep?: (context: BotApiBeforePublishStepContext) => Promise<void> | void
+  afterPublishStep?: (context: BotApiAfterPublishStepContext) => Promise<void> | void
   minPostIntervalMs?: number
   postStateFile?: string
   postLockFile?: string
+}
+
+export class TelegramBotApiRequestError extends Error {
+  readonly method: string
+  readonly retryAfterSeconds?: number
+  readonly statusCode: number
+
+  constructor(options: { message: string; method: string; retryAfterSeconds?: number; statusCode: number }) {
+    super(options.message)
+    this.name = 'TelegramBotApiRequestError'
+    this.method = options.method
+    this.retryAfterSeconds = options.retryAfterSeconds
+    this.statusCode = options.statusCode
+  }
 }
 
 export interface PublishRollbackResult {
@@ -94,8 +126,14 @@ export async function publishBotApiPlan(plan: PublishPlan, config: BotApiPublish
 
       for (const [index, step] of plan.steps.entries()) {
         try {
-          const result = await publishStepWithRetries(step, config, sendRetries)
+          const result = await publishStepWithRetries(step, config, sendRetries, {
+            stepCount: plan.steps.length,
+            stepIndex: index,
+          })
           messages.push(...result)
+          if (index < plan.steps.length - 1) {
+            await delay(config.partSendIntervalMs)
+          }
         } catch (error: unknown) {
           const rollback = await rollbackPublishedMessages(config, messages)
           const detail =
@@ -124,12 +162,29 @@ async function publishStepWithRetries(
   step: PublishStep,
   config: BotApiPublishConfig,
   sendRetries: number,
+  context: { stepCount: number; stepIndex: number },
 ): Promise<TelegramMessage[]> {
   let lastError: unknown
 
   for (let attempt = 1; attempt <= sendRetries; attempt += 1) {
     try {
-      return await publishStep(step, config)
+      await config.beforePublishStep?.({
+        attempt,
+        step,
+        stepCount: context.stepCount,
+        stepIndex: context.stepIndex,
+        target: 'bot-api',
+      })
+      const messages = await publishStep(step, config)
+      await config.afterPublishStep?.({
+        attempt,
+        messageCount: messages.length,
+        step,
+        stepCount: context.stepCount,
+        stepIndex: context.stepIndex,
+        target: 'bot-api',
+      })
+      return messages
     } catch (error: unknown) {
       lastError = error
     }
@@ -246,10 +301,24 @@ async function callTelegramApi<T>(token: string, method: string, body: FormData 
   const payload = (await response.json()) as TelegramApiResponse<T>
 
   if (!response.ok || !payload.ok || payload.result === undefined) {
-    throw new Error(payload.description ?? `Telegram API request failed with status ${response.status}.`)
+    throw new TelegramBotApiRequestError({
+      message: payload.description ?? `Telegram API request failed with status ${response.status}.`,
+      method,
+      retryAfterSeconds:
+        typeof payload.parameters?.retry_after === 'number' ? payload.parameters.retry_after : undefined,
+      statusCode: response.status,
+    })
   }
 
   return payload.result
+}
+
+function delay(intervalMs: number | undefined): Promise<void> {
+  if (intervalMs === undefined || !Number.isFinite(intervalMs) || intervalMs <= 0) {
+    return Promise.resolve()
+  }
+
+  return new Promise(resolve => setTimeout(resolve, intervalMs))
 }
 
 async function appendSingleMedia(form: FormData, field: string, media: MediaItem): Promise<void> {

@@ -2,6 +2,7 @@ export { publishTdlibPlan } from './publisher.js'
 export { resolveTdlibCapabilities } from './capabilities.js'
 export {
   TdlibMessageSendError,
+  TdlibRequestError,
   closeTdlibClient,
   createLoggedInTdlibClient,
   createTdlibClient,

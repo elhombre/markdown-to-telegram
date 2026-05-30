@@ -214,6 +214,16 @@ import { publishTdlibPlan, resolveTdlibCapabilities } from 'markdown-to-telegram
 import { generatePdfThumbnail } from 'markdown-to-telegram/pdf-thumbnail'
 ```
 
+Publishing hooks:
+
+- `publish.partSendIntervalMs`: optional delay in milliseconds between successfully sent plan steps.
+- `publish.beforePublishStep(context)`: optional async callback called before each physical send attempt. The callback receives `target`, `step`, zero-based `stepIndex`, `stepCount`, and one-based retry `attempt`. Omitting the callback preserves the default publisher behavior.
+- `publish.afterPublishStep(context)`: optional async callback called after a physical send step succeeds. It receives the same fields as `beforePublishStep`, plus `messageCount`.
+- Bot API failures expose `TelegramBotApiRequestError.retryAfterSeconds` when Telegram returns `parameters.retry_after`.
+- TDLib request failures expose `TdlibRequestError.floodWaitSeconds` when TDLib returns a `FLOOD_WAIT_N` message.
+
+These hooks are intended for embedding applications that need distributed throttling or diagnostics around each physical Telegram send. The CLI does not require them.
+
 Prepare and plan:
 
 ```ts
