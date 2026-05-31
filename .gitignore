@@ -1,6 +1,7 @@
 .*
 *.tgz
 dist
+dist-cjs
 node_modules
 !.env.example
 !.gitignore

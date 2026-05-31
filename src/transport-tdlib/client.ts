@@ -1,9 +1,9 @@
 import { mkdir } from 'node:fs/promises'
-import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { basename, dirname, extname, parse, resolve } from 'node:path'
 
 import { generatePdfThumbnail } from '../pdf-thumbnail/index.js'
+import { getTdjson } from 'prebuilt-tdlib'
 import * as tdl from 'tdl'
 
 import type {
@@ -14,9 +14,6 @@ import type {
   TdlibRuntimeSnapshot,
   TdlibSessionConfig,
 } from './types.js'
-
-const require = createRequire(import.meta.url)
-const { getTdjson } = require('prebuilt-tdlib') as { getTdjson: () => string }
 
 let isConfigured = false
 const MESSAGE_SEND_TIMEOUT_MS = 5 * 60 * 1000
